@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<Description>The Cirreum Messaging Library.</Description>
+		<PackageTags>cirreum,message,servicebus,distributed</PackageTags>
+	</PropertyGroup>
+
+</Project>
