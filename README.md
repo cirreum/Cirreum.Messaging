@@ -31,7 +31,7 @@ A comprehensive .NET library for building distributed messaging systems with ver
 
 ### 🔧 **Developer Experience**
 
-- **MediatR Integration**: Seamless integration with MediatR for CQRS patterns
+- **Conductor Integration**: Seamless integration with Conductor for CQRS patterns
 - **Fluent API**: Clean, discoverable API design
 - **Configuration-Driven**: Extensive configuration options via appsettings.json
 - **Testing Support**: Empty transport publisher for development and testing
@@ -69,8 +69,8 @@ public record UserCreatedV2(string Username, string Email, string DisplayName) :
 services.Configure<DistributionOptions>(configuration.GetSection("Distribution"));
 services.AddScoped<IDistributedTransportPublisher, DefaultTransportPublisher>();
 
-// Register MediatR handlers for automatic message distribution
-services.AddMediatR(typeof(Program));
+// Register Conductor for automatic message distribution
+services.AddConductor();
 services.AddScoped(typeof(INotificationHandler<>), typeof(DistributedMessageHandler<>));
 ```
 
@@ -99,8 +99,8 @@ services.AddScoped(typeof(INotificationHandler<>), typeof(DistributedMessageHand
 ### 4. Send Messages
 
 ```csharp
-// Via MediatR (recommended)
-await mediator.Publish(new UserCreatedV2("john_doe", "john@example.com", "John Doe"));
+// Via Conductor (recommended)
+await conductor.PublishAsync(new UserCreatedV2("john_doe", "john@example.com", "John Doe"));
 
 // Direct via transport publisher
 await transportPublisher.PublishMessageAsync(
@@ -143,7 +143,7 @@ public async Task ProcessUserEvents(
 ```text
 Application Code
       ↓
-   MediatR Publish
+   Conductor PublishAsync
       ↓
 DistributedMessageHandler
       ↓
