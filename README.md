@@ -17,7 +17,7 @@ Cirreum.Messaging contains:
 - **`IMessagingClient`** — the entry point: `UseQueue` / `UseQueueSender` / `UseQueueReceiver` / `UseTopic` / `UseSubscription`, plus `UseClient<T>` to escape-hatch to the native provider client
 - **Sending** — `IMessagingQueueSender` / `IMessagingTopicSender` with single and batch operations, and `OutboundMessage` (content, subject, correlation, TTL, and a cross-broker filterable `Properties` bag)
 - **Receiving** — `IMessagingQueueReceiver` / `IMessagingSubscriptionReceiver` with receive-one, receive-many, streaming (`ReceiveMessagesStreamAsync`), and peek; received messages expose content, properties, and the broker ack model (`Complete` / `Abandon` / `Defer` / `DeadLetter` / `RenewLock`)
-- **`ReceiverTuning`** — optional broker-level tuning applied when a receiver is created (`PrefetchCount`, `MaxAutoLockRenewalDuration`), via overloads of `UseQueueReceiver` / `UseSubscription`
+- **`ReceiverTuning`** — optional broker-level tuning applied when a receiver is created (`PrefetchCount`), via overloads of `UseQueueReceiver` / `UseSubscription`
 
 ## Quick Start
 
@@ -75,10 +75,14 @@ the broker's own defaults:
 
 ```csharp
 var receiver = client.UseQueueReceiver("orders.pending.v1", new ReceiverTuning {
-	PrefetchCount = 50,
-	MaxAutoLockRenewalDuration = TimeSpan.FromMinutes(10)
+	PrefetchCount = 50
 });
 ```
+
+Message-lock renewal is deliberately **not** here: it is a processing-time behavior over
+`IMessagingReceivedMessage.RenewLockAsync`, owned by whoever runs the handler (e.g. the
+distributed channel's receive loop in `Cirreum.Runtime.Messaging`), not a receiver-creation
+option.
 
 Two rules keep tuning honest:
 

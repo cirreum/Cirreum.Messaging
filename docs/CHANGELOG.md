@@ -12,6 +12,21 @@ guides linked at the bottom of each entry.
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-08-04
+
+### Breaking
+
+- **`ReceiverTuning.MaxAutoLockRenewalDuration` removed** — a same-day, pre-adoption
+  correction to 1.1.0. Implementing the Azure mapping surfaced that the pull-based receiver
+  surface has no creation-time renewal option to map it onto (auto-renewal is a push-processor
+  feature): the knob could never have a consumer, which is the inert-configuration defect this
+  chain exists to eliminate. Lock renewal is a processing-time behavior over the existing
+  `IMessagingReceivedMessage.RenewLockAsync`, owned by whoever runs the handler — the
+  distributed channel's receive loop honors `ReceiverOptions.MaxAutoLockRenewalDuration` there
+  (see `Cirreum.Runtime.Messaging`). `ReceiverTuning` is creation-time broker options only:
+  `PrefetchCount`. Shipped as a patch deliberately (`-AllowBreakingPatch`): 1.1.0 released
+  earlier today with zero adopters.
+
 ## [1.1.0] - 2026-08-04
 
 ### Added

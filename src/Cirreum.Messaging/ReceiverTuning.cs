@@ -18,6 +18,12 @@ namespace Cirreum.Messaging;
 /// previously created instance — a tuning value that binds but never reaches the broker
 /// is indistinguishable from working.
 /// </para>
+/// <para>
+/// Only broker-creation options belong here. Message-lock renewal is deliberately absent:
+/// it is a processing-time behavior over <see cref="IMessagingReceivedMessage.RenewLockAsync"/>,
+/// owned by whoever runs the handler (the distributed channel's receive loop), not a
+/// receiver-creation option.
+/// </para>
 /// </remarks>
 public sealed record ReceiverTuning {
 
@@ -29,15 +35,9 @@ public sealed record ReceiverTuning {
 	public int? PrefetchCount { get; init; }
 
 	/// <summary>
-	/// How long the broker client keeps auto-renewing a received message's lock while it
-	/// is being processed. <see cref="TimeSpan.Zero"/> disables auto-renewal.
-	/// </summary>
-	public TimeSpan? MaxAutoLockRenewalDuration { get; init; }
-
-	/// <summary>
 	/// Whether this instance carries no explicit values — equivalent to supplying no
 	/// tuning at all.
 	/// </summary>
-	public bool IsEmpty => this.PrefetchCount is null && this.MaxAutoLockRenewalDuration is null;
+	public bool IsEmpty => this.PrefetchCount is null;
 
 }
