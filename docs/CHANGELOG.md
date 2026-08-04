@@ -12,6 +12,21 @@ guides linked at the bottom of each entry.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-04
+
+### Added
+
+- **`ReceiverTuning`** — broker-agnostic, creation-time receiver tuning (`PrefetchCount`,
+  `MaxAutoLockRenewalDuration`); every value nullable, null meaning "the broker's own
+  default". (From the backlog: head of the three-repo receiver-tuning chain.)
+- **`UseQueueReceiver(string, ReceiverTuning)` and `UseSubscription(string, string,
+  ReceiverTuning)`** — default-implemented overloads on `IMessagingClient`. The defaults
+  delegate to the untuned methods when the tuning carries no values and throw
+  `NotSupportedException` when it does, so an implementation that has not opted into tuning
+  fails loudly instead of silently discarding it — the discard-is-invisible failure this
+  chain exists to eliminate. Implementations that cache receivers by name must throw when
+  the same receiver is requested with different tuning; the contract documents this.
+
 ## [1.0.109] - 2026-07-05
 
 ### Fixed

@@ -17,6 +17,7 @@ Cirreum.Messaging contains:
 - **`IMessagingClient`** — the entry point: `UseQueue` / `UseQueueSender` / `UseQueueReceiver` / `UseTopic` / `UseSubscription`, plus `UseClient<T>` to escape-hatch to the native provider client
 - **Sending** — `IMessagingQueueSender` / `IMessagingTopicSender` with single and batch operations, and `OutboundMessage` (content, subject, correlation, TTL, and a cross-broker filterable `Properties` bag)
 - **Receiving** — `IMessagingQueueReceiver` / `IMessagingSubscriptionReceiver` with receive-one, receive-many, streaming (`ReceiveMessagesStreamAsync`), and peek; received messages expose content, properties, and the broker ack model (`Complete` / `Abandon` / `Defer` / `DeadLetter` / `RenewLock`)
+- **`ReceiverTuning`** — optional broker-level tuning applied when a receiver is created (`PrefetchCount`, `MaxAutoLockRenewalDuration`), via overloads of `UseQueueReceiver` / `UseSubscription`
 
 ## Quick Start
 
@@ -66,6 +67,26 @@ await client.UseTopic("app.notifications.v1")
 var received = await client.UseSubscription("app.notifications.v1", "api-head")
 	.ReceiveMessageAsync();
 ```
+
+## Receiver tuning
+
+Receivers accept optional broker-level tuning at creation. Values you don't set fall back to
+the broker's own defaults:
+
+```csharp
+var receiver = client.UseQueueReceiver("orders.pending.v1", new ReceiverTuning {
+	PrefetchCount = 50,
+	MaxAutoLockRenewalDuration = TimeSpan.FromMinutes(10)
+});
+```
+
+Two rules keep tuning honest:
+
+- **Provider support is required.** A provider that has not opted into tuning throws
+  `NotSupportedException` when the tuning carries values — it never silently discards them.
+- **Tuning is creation-time.** Receivers are cached by name, so requesting the same receiver
+  again with *different* tuning throws rather than silently returning the previously created
+  instance.
 
 ## Where distributed messaging lives
 
