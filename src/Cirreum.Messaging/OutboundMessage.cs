@@ -1,4 +1,4 @@
-﻿namespace Cirreum.Messaging;
+namespace Cirreum.Messaging;
 
 using System.Text;
 using System.Text.Json;
@@ -139,22 +139,28 @@ public class OutboundMessage : IMessagingSendableMessage {
 	/// Constructs a message that can be sent to a message broker's Queue or Topic.
 	/// </summary>
 	/// <param name="content">The raw content of the message from a string.</param>
-	/// <param name="properties">The message specific metadata or attributes associated with the message.</param>
+	/// <param name="properties">The message specific metadata or attributes associated with the message. Copied;
+	/// the message does not retain a reference to the supplied instance.</param>
 	public OutboundMessage(string content, IDictionary<string, object> properties) {
+		ArgumentNullException.ThrowIfNull(properties);
 		this.Content = Encoding.UTF8.GetBytes(content);
-		this.Properties = properties;
+		this.Properties = new Dictionary<string, object>(properties);
 	}
 
 	/// <summary>
 	/// Constructs a message that can be sent to a message broker's Queue or Topic.
 	/// </summary>
 	/// <param name="content">The raw content of the message from a string.</param>
-	/// <param name="properties">The message specific metadata or attributes associated with the message.</param>
-	/// <param name="providerProperties">The provider-specific properties for additional message details.</param>
+	/// <param name="properties">The message specific metadata or attributes associated with the message. Copied;
+	/// the message does not retain a reference to the supplied instance.</param>
+	/// <param name="providerProperties">The provider-specific properties for additional message details. Copied;
+	/// the message does not retain a reference to the supplied instance.</param>
 	public OutboundMessage(string content, IDictionary<string, object> properties, IDictionary<string, object> providerProperties) {
+		ArgumentNullException.ThrowIfNull(properties);
+		ArgumentNullException.ThrowIfNull(providerProperties);
 		this.Content = Encoding.UTF8.GetBytes(content);
-		this.Properties = properties;
-		this.ProviderProperties = providerProperties;
+		this.Properties = new Dictionary<string, object>(properties);
+		this.ProviderProperties = new Dictionary<string, object>(providerProperties);
 	}
 
 	/// <summary>

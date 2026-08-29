@@ -12,6 +12,27 @@ guides linked at the bottom of each entry.
 
 ## [Unreleased]
 
+### Fixed
+
+- **`OutboundMessage` copies the property bags it is given instead of adopting them.** The
+  constructors taking `properties` / `providerProperties` assigned the caller's instance directly.
+  A message is stamped with routing keys before it reaches the broker, so those writes landed in
+  the caller's dictionary — and a read-only or frozen dictionary threw `NotSupportedException` at
+  send time rather than at construction. Each bag is now copied, and a null bag is rejected by the
+  constructor. A message's own bag uses ordinal key comparison regardless of how the supplied
+  dictionary was built.
+
+- **`ReceiverTuning.PrefetchCount` enforces the bound it documents.** A negative value was accepted
+  and left for each broker implementation to reject; it now throws `ArgumentOutOfRangeException`
+  where the value is set.
+
+### Updated
+
+- Adds the test project the repository did not have. It covers the property-bag ownership above, the
+  `ReceiverTuning` bounds and the equality the receiver cache compares on, and the `IMessagingClient`
+  tuning default-interface methods — empty tuning delegating to the untuned overload, and tuning
+  carrying a value failing loudly.
+
 ## [1.1.1] - 2026-08-04
 
 ### Breaking

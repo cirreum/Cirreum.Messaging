@@ -27,12 +27,23 @@ namespace Cirreum.Messaging;
 /// </remarks>
 public sealed record ReceiverTuning {
 
+	private readonly int? _prefetchCount;
+
 	/// <summary>
 	/// Number of messages the broker client prefetches into its local buffer ahead of
 	/// processing. Higher values increase throughput at the cost of longer lock exposure
 	/// for buffered messages. <c>0</c> disables prefetch. Must not be negative.
 	/// </summary>
-	public int? PrefetchCount { get; init; }
+	/// <exception cref="ArgumentOutOfRangeException">The value is negative.</exception>
+	public int? PrefetchCount {
+		get => this._prefetchCount;
+		init {
+			if (value.HasValue) {
+				ArgumentOutOfRangeException.ThrowIfNegative(value.Value, nameof(this.PrefetchCount));
+			}
+			this._prefetchCount = value;
+		}
+	}
 
 	/// <summary>
 	/// Whether this instance carries no explicit values — equivalent to supplying no
