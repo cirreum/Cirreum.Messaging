@@ -21,9 +21,9 @@ upgrade, a coordinated multi-repo rollout).
 
 ### Framework-written message properties have no declared value shape
 
-**SemVer:** Minor
+**SemVer:** Minor  
 **Trigger:** A second messaging provider lands (AWS SNS/SQS or Kafka), or any framework
-component starts branching on a `Properties` value beyond a presence check.
+component starts branching on a `Properties` value beyond a presence check.  
 **Noted:** 2026-08-29
 
 `IMessagingReceivableMessage.Properties` and `ProviderProperties` are
