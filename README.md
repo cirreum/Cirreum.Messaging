@@ -69,6 +69,36 @@ var received = await client.UseSubscription("app.notifications.v1", "api-head")
 	.ReceiveMessageAsync();
 ```
 
+## Property ownership
+
+A message carries three property bags. Each has exactly one owner, and is named for it:
+
+| Bag | Owner | Values |
+| --- | --- | --- |
+| `ApplicationProperties` | the application | `object` |
+| `SystemProperties` | Cirreum | `string` |
+| `ProviderProperties` | the messaging provider | `object` |
+
+```csharp
+var message = OutboundMessage.AsJsonContent(order).WithSubject("orders.created");
+
+message.ApplicationProperties["tenant"] = tenantId;   // yours
+message.ProviderProperties["SessionId"] = order.Id;   // the broker's knobs
+```
+
+Three rules keep the bags honest:
+
+- **A provider forwards what it is given.** Application and system properties travel as supplied;
+  a provider does not rename or drop one. (A null-valued application property is the one
+  exception — it has no portable representation, so it is not transmitted.)
+- **System keys are reserved.** They carry the `cirreum.` prefix — see `SystemProperty.IsReserved`
+  — and an application cannot occupy that space: a reserved key written into
+  `ApplicationProperties` is not forwarded. Use `OutboundMessage.WithSystemProperty`, which
+  enforces the prefix.
+- **System values are strings.** Framework metadata is read without deserializing the payload, so
+  its shape must survive any broker's header model unchanged. That is a `string` — not `object`,
+  whose runtime type would otherwise depend on which provider is configured.
+
 ## Receiver tuning
 
 Receivers accept optional broker-level tuning at creation. Values you don't set fall back to
