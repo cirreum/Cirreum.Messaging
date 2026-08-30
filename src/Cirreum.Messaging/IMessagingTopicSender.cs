@@ -1,4 +1,4 @@
-﻿namespace Cirreum.Messaging;
+namespace Cirreum.Messaging;
 
 /// <summary>
 /// Represents a sender that broadcasts messages by sending to a topic in a messaging system.
@@ -25,13 +25,13 @@ public interface IMessagingTopicSender {
 	/// <summary>
 	/// Broadcast a raw string message to a topic with additional properties (simplified overload).
 	/// </summary>
-	public Task BroadcastMessageAsync(string message, IDictionary<string, object> properties, CancellationToken cancellationToken = default)
-		=> this.BroadcastMessageAsync(new OutboundMessage(message, properties), cancellationToken);
+	public Task BroadcastMessageAsync(string message, IDictionary<string, object> applicationProperties, CancellationToken cancellationToken = default)
+		=> this.BroadcastMessageAsync(new OutboundMessage(message, applicationProperties), cancellationToken);
 
 	/// <summary>
 	/// Broadcast multiple <see cref="OutboundMessage"/> objects to a topic.
 	/// </summary>
 	Task BroadcastMessagesAsync(IEnumerable<OutboundMessage> messages,
-		IDictionary<string, object>? commonProperties = null, CancellationToken cancellationToken = default);
+		IDictionary<string, object>? commonApplicationProperties = null, CancellationToken cancellationToken = default);
 
 }

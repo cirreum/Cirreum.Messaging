@@ -1,4 +1,4 @@
-﻿namespace Cirreum.Messaging;
+namespace Cirreum.Messaging;
 
 /// <summary>
 /// A marker interface for a message that can be received from a queue or subscription, encapsulating its metadata and payload.
@@ -7,6 +7,11 @@
 /// <para>
 /// Implementors should implement the <see cref="IMessagingQueuePeekedMessage"/> 
 /// and <see cref="IMessagingReceivedMessage"/> interfaces.
+/// </para>
+/// <para>
+/// A message carries three property bags, each with one owner: <see cref="ApplicationProperties"/>
+/// belongs to the application, <see cref="SystemProperties"/> to the framework, and
+/// <see cref="ProviderProperties"/> to the messaging provider.
 /// </para>
 /// </remarks>
 public interface IMessagingReceivableMessage
@@ -28,9 +33,18 @@ public interface IMessagingReceivableMessage
 	int DeliveryCount { get; }
 
 	/// <summary>
-	/// Gets a dictionary of message specific metadata or attributes associated with the message.
+	/// Gets the application's metadata associated with the message, as the sender supplied it.
 	/// </summary>
-	IReadOnlyDictionary<string, object> Properties { get; }
+	IReadOnlyDictionary<string, object> ApplicationProperties { get; }
+
+	/// <summary>
+	/// Gets the framework's metadata associated with the message, readable without deserializing the
+	/// payload. Keys are reserved — see <see cref="SystemProperty.IsReserved"/>.
+	/// </summary>
+	/// <remarks>
+	/// Values are strings so that a provider's header model cannot alter the shape in transit.
+	/// </remarks>
+	IReadOnlyDictionary<string, string> SystemProperties { get; }
 
 	/// <summary>
 	/// Gets a dictionary of messaging provider-specific properties associated with the message.

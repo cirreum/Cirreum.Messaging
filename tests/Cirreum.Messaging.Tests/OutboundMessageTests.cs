@@ -3,10 +3,10 @@ namespace Cirreum.Messaging.Tests;
 using System.Collections.ObjectModel;
 
 /// <summary>
-/// Proofs that an <see cref="OutboundMessage"/> owns its property bags. A message is stamped with
-/// framework-written routing keys before it reaches the broker, so a bag shared with the caller
-/// would let those writes escape into the caller's dictionary — or fail outright against one that
-/// does not support writes.
+/// Proofs that an <see cref="OutboundMessage"/> owns its property bags, and that the framework's
+/// bag is reserved. A message is stamped with framework-written routing keys before it reaches the
+/// broker, so a bag shared with the caller would let those writes escape into the caller's
+/// dictionary — or fail outright against one that does not support writes.
 /// </summary>
 public class OutboundMessageTests {
 
@@ -17,7 +17,7 @@ public class OutboundMessageTests {
 	public void Supplied_properties_are_present_on_the_message() {
 		var message = new OutboundMessage("payload", Properties());
 
-		message.Properties.Should().ContainKey("tenant").WhoseValue.Should().Be("acme");
+		message.ApplicationProperties.Should().ContainKey("tenant").WhoseValue.Should().Be("acme");
 	}
 
 	[Fact]
@@ -28,8 +28,8 @@ public class OutboundMessageTests {
 		supplied["tenant"] = "changed";
 		supplied["added-later"] = true;
 
-		message.Properties["tenant"].Should().Be("acme");
-		message.Properties.Should().NotContainKey("added-later");
+		message.ApplicationProperties["tenant"].Should().Be("acme");
+		message.ApplicationProperties.Should().NotContainKey("added-later");
 	}
 
 	[Fact]
@@ -38,7 +38,7 @@ public class OutboundMessageTests {
 		var message = new OutboundMessage("payload", supplied);
 
 		// What the delivery engine does to every outbound message before it is sent.
-		message.Properties["Cirreum.Node"] = "node-1";
+		message.ApplicationProperties["Cirreum.Node"] = "node-1";
 
 		supplied.Should().NotContainKey("Cirreum.Node");
 		supplied.Should().HaveCount(1);
@@ -49,10 +49,10 @@ public class OutboundMessageTests {
 		var supplied = new ReadOnlyDictionary<string, object>(Properties());
 
 		var message = new OutboundMessage("payload", supplied);
-		var stamp = () => message.Properties["Cirreum.Node"] = "node-1";
+		var stamp = () => message.ApplicationProperties["Cirreum.Node"] = "node-1";
 
 		stamp.Should().NotThrow();
-		message.Properties["tenant"].Should().Be("acme");
+		message.ApplicationProperties["tenant"].Should().Be("acme");
 	}
 
 	[Fact]
@@ -81,8 +81,44 @@ public class OutboundMessageTests {
 	public void A_message_built_without_properties_still_accepts_stamps() {
 		var message = new OutboundMessage("payload");
 
-		message.Properties["Cirreum.Node"] = "node-1";
+		message.ApplicationProperties["Cirreum.Node"] = "node-1";
 
-		message.Properties.Should().ContainKey("Cirreum.Node");
+		message.ApplicationProperties.Should().ContainKey("Cirreum.Node");
+	}
+
+	// System properties ————————————————————————————————————————
+
+	[Fact]
+	public void A_reserved_system_property_is_accepted() {
+		var message = new OutboundMessage("payload")
+			.WithSystemProperty("cirreum.node", "node-1");
+
+		message.SystemProperties["cirreum.node"].Should().Be("node-1");
+	}
+
+	[Fact]
+	public void An_unreserved_system_property_key_is_rejected() {
+		var message = new OutboundMessage("payload");
+
+		var act = () => message.WithSystemProperty("node", "node-1");
+
+		act.Should().Throw<ArgumentException>().WithMessage("*reserved*");
+	}
+
+	[Fact]
+	public void System_properties_are_separate_from_application_properties() {
+		var message = new OutboundMessage("payload", Properties())
+			.WithSystemProperty("cirreum.node", "node-1");
+
+		message.ApplicationProperties.Should().NotContainKey("cirreum.node");
+		message.SystemProperties.Should().NotContainKey("tenant");
+	}
+
+	[Fact]
+	public void System_property_keys_are_compared_ordinally() {
+		var message = new OutboundMessage("payload")
+			.WithSystemProperty("cirreum.node", "node-1");
+
+		message.SystemProperties.ContainsKey("Cirreum.Node").Should().BeFalse();
 	}
 }

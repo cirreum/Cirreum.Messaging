@@ -8,20 +8,6 @@ using System.Text.Json;
 /// </summary>
 public class OutboundMessage : IMessagingSendableMessage {
 
-	/// <summary>
-	/// The list of properties available in this agnostic <see cref="OutboundMessage"/>.
-	/// </summary>
-	public static string[] StandardProperties { get; } = [
-		"MessageId",    // maps to OutboundMessage.Id
-		"Content",
-		"ContentString",
-		"ContentType",
-		"CorrelationId",
-		"Subject",
-		"TimeToLive",
-		"ReplyTo"
-	];
-
 	// IMessagingSendableMessage properties
 
 	/// <inheritdoc/>
@@ -80,7 +66,27 @@ public class OutboundMessage : IMessagingSendableMessage {
 	}
 
 	/// <inheritdoc/>
-	public IDictionary<string, object> Properties { get; } = new Dictionary<string, object>();
+	public IDictionary<string, object> ApplicationProperties { get; } = new Dictionary<string, object>();
+
+	/// <inheritdoc/>
+	public IDictionary<string, string> SystemProperties { get; } = new Dictionary<string, string>(StringComparer.Ordinal);
+
+	/// <summary>
+	/// Sets a framework system property and returns this instance for fluent assignment.
+	/// </summary>
+	/// <param name="key">The reserved property key.</param>
+	/// <param name="value">The property value.</param>
+	/// <returns>The current instance.</returns>
+	/// <exception cref="ArgumentException"><paramref name="key"/> is not a reserved key.</exception>
+	public OutboundMessage WithSystemProperty(string key, string value) {
+		if (!SystemProperty.IsReserved(key)) {
+			throw new ArgumentException(
+				$"System property keys are reserved and must begin with '{SystemProperty.ReservedPrefix}'; got '{key}'.",
+				nameof(key));
+		}
+		this.SystemProperties[key] = value;
+		return this;
+	}
 
 	/// <inheritdoc/> 
 	public IDictionary<string, object> ProviderProperties { get; } = new Dictionary<string, object>();
@@ -139,27 +145,27 @@ public class OutboundMessage : IMessagingSendableMessage {
 	/// Constructs a message that can be sent to a message broker's Queue or Topic.
 	/// </summary>
 	/// <param name="content">The raw content of the message from a string.</param>
-	/// <param name="properties">The message specific metadata or attributes associated with the message. Copied;
+	/// <param name="applicationProperties">The application's metadata to associate with the message. Copied;
 	/// the message does not retain a reference to the supplied instance.</param>
-	public OutboundMessage(string content, IDictionary<string, object> properties) {
-		ArgumentNullException.ThrowIfNull(properties);
+	public OutboundMessage(string content, IDictionary<string, object> applicationProperties) {
+		ArgumentNullException.ThrowIfNull(applicationProperties);
 		this.Content = Encoding.UTF8.GetBytes(content);
-		this.Properties = new Dictionary<string, object>(properties);
+		this.ApplicationProperties = new Dictionary<string, object>(applicationProperties);
 	}
 
 	/// <summary>
 	/// Constructs a message that can be sent to a message broker's Queue or Topic.
 	/// </summary>
 	/// <param name="content">The raw content of the message from a string.</param>
-	/// <param name="properties">The message specific metadata or attributes associated with the message. Copied;
+	/// <param name="applicationProperties">The application's metadata to associate with the message. Copied;
 	/// the message does not retain a reference to the supplied instance.</param>
 	/// <param name="providerProperties">The provider-specific properties for additional message details. Copied;
 	/// the message does not retain a reference to the supplied instance.</param>
-	public OutboundMessage(string content, IDictionary<string, object> properties, IDictionary<string, object> providerProperties) {
-		ArgumentNullException.ThrowIfNull(properties);
+	public OutboundMessage(string content, IDictionary<string, object> applicationProperties, IDictionary<string, object> providerProperties) {
+		ArgumentNullException.ThrowIfNull(applicationProperties);
 		ArgumentNullException.ThrowIfNull(providerProperties);
 		this.Content = Encoding.UTF8.GetBytes(content);
-		this.Properties = new Dictionary<string, object>(properties);
+		this.ApplicationProperties = new Dictionary<string, object>(applicationProperties);
 		this.ProviderProperties = new Dictionary<string, object>(providerProperties);
 	}
 
@@ -182,14 +188,14 @@ public class OutboundMessage : IMessagingSendableMessage {
 	/// </summary>
 	/// <typeparam name="T">The type of object to serialize.</typeparam>
 	/// <param name="message">The object to serialize as the message content.</param>
-	/// <param name="properties">The message specific metadata or attributes associated with the message.</param>
+	/// <param name="applicationProperties">The application's metadata to associate with the message.</param>
 	/// <returns>A new <see cref="OutboundMessage"/> with JSON-serialized content and "application/json" content type.</returns>
 	/// <exception cref="JsonException">Thrown when serialization of the message fails.</exception>
 	public static OutboundMessage AsJsonContent<T>(
 		T message,
-		IDictionary<string, object> properties)
+		IDictionary<string, object> applicationProperties)
 		where T : notnull {
-		return new(JsonSerializer.Serialize(message), properties) {
+		return new(JsonSerializer.Serialize(message), applicationProperties) {
 			ContentType = "application/json"
 		};
 	}
@@ -198,16 +204,16 @@ public class OutboundMessage : IMessagingSendableMessage {
 	/// </summary>
 	/// <typeparam name="T">The type of object to serialize.</typeparam>
 	/// <param name="message">The object to serialize as the message content.</param>
-	/// <param name="properties">The message specific metadata or attributes associated with the message.</param>
+	/// <param name="applicationProperties">The application's metadata to associate with the message.</param>
 	/// <param name="providerProperties">The provider-specific properties for additional message details.</param>
 	/// <returns>A new <see cref="OutboundMessage"/> with JSON-serialized content and "application/json" content type.</returns>
 	/// <exception cref="JsonException">Thrown when serialization of the message fails.</exception>
 	public static OutboundMessage AsJsonContent<T>(
 		T message,
-		IDictionary<string, object> properties,
+		IDictionary<string, object> applicationProperties,
 		IDictionary<string, object> providerProperties)
 		where T : notnull {
-		return new(JsonSerializer.Serialize(message), properties, providerProperties) {
+		return new(JsonSerializer.Serialize(message), applicationProperties, providerProperties) {
 			ContentType = "application/json"
 		};
 	}

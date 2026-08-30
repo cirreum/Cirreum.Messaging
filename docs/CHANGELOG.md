@@ -12,6 +12,38 @@ guides linked at the bottom of each entry.
 
 ## [Unreleased]
 
+### Breaking
+
+- **Each property bag has one owner, and is named for it.** `Properties` becomes
+  `ApplicationProperties` on `IMessagingSendableMessage`, `IMessagingReceivableMessage` and
+  `OutboundMessage`; `SystemProperties` is added as a required member, reserved for the framework
+  and typed `IDictionary<string, string>` rather than `object`.
+
+  `Properties` had three writers and no stated owner: the application's metadata, the distributed
+  layer's routing keys, and whatever a provider chose to forward. That left the framework's
+  self-echo skip resting on three assumptions the abstraction never made — that a provider forwards
+  the property, that it does not filter it, and that the value returns with the type it was written
+  with. The last was read through a type test that produces no match, no log and no error when it
+  misses, and holds only because the one provider's header model happens to return a string as a
+  string.
+
+  System property values are strings so a provider's header model cannot alter the shape in
+  transit, and keys carry a reserved `cirreum.` prefix — see `SystemProperty.IsReserved` and
+  `OutboundMessage.WithSystemProperty`, which enforces it. The package does not define any system
+  property key; the framework component that writes one owns it.
+
+- **`OutboundMessage.StandardProperties` is removed.** It existed so a provider could share one
+  definition of "already a first-class message field". No code referenced it — the only provider
+  that needed the list declared its own copy, which had already drifted — and providers no longer
+  filter application properties, so it has nothing left to serve.
+
+- **Provider obligations are stated on the interfaces.** Application properties are forwarded as
+  supplied, system properties are forwarded and never filtered, and a null-valued application
+  property is not transmitted. These were previously per-provider liberties.
+
+  See [MIGRATION-v2](MIGRATION-v2.md).
+
+
 ### Fixed
 
 - **`OutboundMessage` copies the property bags it is given instead of adopting them.** The
