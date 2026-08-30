@@ -12,6 +12,8 @@ guides linked at the bottom of each entry.
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-08-29
+
 ### Breaking
 
 - **Each property bag has one owner, and is named for it.** `Properties` becomes
