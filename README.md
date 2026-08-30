@@ -16,7 +16,7 @@ Cirreum.Messaging contains:
 
 - **`IMessagingClient`** — the entry point: `UseQueue` / `UseQueueSender` / `UseQueueReceiver` / `UseTopic` / `UseSubscription`, plus `UseClient<T>` to escape-hatch to the native provider client
 - **Sending** — `IMessagingQueueSender` / `IMessagingTopicSender` with single and batch operations, and `OutboundMessage` (content, subject, correlation, TTL, and the property bags below)
-- **Receiving** — `IMessagingQueueReceiver` / `IMessagingSubscriptionReceiver` with receive-one, receive-many, streaming (`ReceiveMessagesStreamAsync`), and peek; received messages expose content, properties, and the broker ack model (`Complete` / `Abandon` / `Defer` / `DeadLetter` / `RenewLock`)
+- **Receiving** — `IMessagingQueueReceiver` / `IMessagingSubscriptionReceiver` with receive-one, receive-many, streaming (`ReceiveMessagesStreamAsync`), and peek; received messages expose content, the three property bags below, and the broker ack model (`Complete` / `Abandon` / `Defer` / `DeadLetter` / `RenewLock`)
 - **Property bags** — three, each with one owner: `ApplicationProperties` for the application's own cross-broker filterable metadata, `SystemProperties` for framework metadata a receiver reads without deserializing the payload (reserved keys, `string` values), and `ProviderProperties` for provider-specific knobs. A provider forwards the first two as supplied and never filters a system property.
 - **`ReceiverTuning`** — optional broker-level tuning applied when a receiver is created (`PrefetchCount`), via overloads of `UseQueueReceiver` / `UseSubscription`
 
